@@ -14,6 +14,10 @@ namespace WebApiAutores.Entities
         [StringLength(70)]
         public string Name { get; set; }
 
+        [Column("url_imagen")]
+
+        public string Url { get; set; }
+
         public virtual IEnumerable<Book> Books { get; set; }
     }
 }

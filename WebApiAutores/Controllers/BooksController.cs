@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApiAutores.Dtos;
@@ -8,6 +9,7 @@ using WebApiAutores.Entities;
 
 namespace WebApiAutores.Controllers
 {
+    
     [Route("api/books")]
     [ApiController]
     [Authorize]
@@ -15,13 +17,60 @@ namespace WebApiAutores.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly ImgBBService _imgBBService;
 
         public BooksController(ApplicationDbContext context,
-            IMapper mapper)
+            IMapper mapper, ImgBBService imgBBService)
         {
             _context = context;
             _mapper = mapper;
+            _imgBBService = imgBBService;
         }
+
+        [HttpPost("{libroId}/cargar-portada")]
+        public async Task<IActionResult> CargarPortadaLibro(Guid libroId, [FromForm] IFormFile file)
+        {
+            
+
+            var BookDb = await _context.Books.FindAsync(libroId);
+
+            if (BookDb == null)
+            {
+                return NotFound(new ResponseDto<BookDto>
+                {
+                    Status = false,
+                    Message = $"No existe el libro con ID {libroId}",
+                });
+            }
+
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new ResponseDto<BookDto>
+                {
+                    Status = false,
+                    Message = "El archivo de portada no es válido",
+                });
+            }
+
+            using (var memoryStream = new MemoryStream())
+            {
+                await file.CopyToAsync(memoryStream);
+
+                string apiKey = "c8a703a903664ad0556780d0aa874d56";
+                string imageUrl = await _imgBBService.UploadImageAsync(memoryStream, file.FileName);
+
+                BookDb.Url = imageUrl;
+                await _context.SaveChangesAsync();
+
+                return Ok(new ResponseDto<string>
+                {
+                    Status = true,
+                    Message = "Portada del libro cargada exitosamente"
+                });
+            }
+        }
+
+
 
         [HttpGet]
         [AllowAnonymous]

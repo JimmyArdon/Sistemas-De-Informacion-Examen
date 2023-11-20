@@ -30,6 +30,9 @@ namespace WebApiAutores.Entities
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal ValoracionPromedio { get; set; }
+
+        [Column ("url_imagen")]
+        public string Url { get; set; }
         public ICollection<Reviews> Reviews { get; set; }
 
         [ForeignKey(nameof(AutorId))]

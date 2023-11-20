@@ -1,6 +1,10 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
+using System.Security.Claims;
 using WebApiAutores.Dtos;
 using WebApiAutores.Dtos.Autores;
 using WebApiAutores.Entities;
@@ -9,18 +13,68 @@ namespace WebApiAutores.Controllers
 {
     [Route("api/autores")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class AutoresController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly ImgBBService _imgBBService;
+
 
         public AutoresController(ApplicationDbContext context,
-            IMapper mapper)
+            IMapper mapper, ImgBBService imgBBService)
         {
             _context = context;
             _mapper = mapper;
+            _imgBBService = imgBBService;
+            
         }
+
+        [HttpPost("{autorId}/cargar-foto")]
+        public async Task<IActionResult> CargarFotoAutor(int autorId, [FromForm] IFormFile file)
+        {
+            var autorDb = await _context.Autores.FindAsync(autorId);
+
+            if (autorDb == null)
+            {
+                return NotFound(new ResponseDto<AutorDto>
+                {
+                    Status = false,
+                    Message = $"No existe el autor con ID {autorId}",
+                });
+            }
+
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new ResponseDto<AutorDto>
+                {
+                    Status = false,
+                    Message = "El archivo de imagen no es válido",
+                });
+            }
+
+            using (var memoryStream = new MemoryStream())
+            {
+                await file.CopyToAsync(memoryStream);
+
+                string apiKey = "c8a703a903664ad0556780d0aa874d56";
+                string imageUrl = await _imgBBService.UploadImageAsync(memoryStream, file.FileName);
+
+
+
+                autorDb.Url = imageUrl;
+                await _context.SaveChangesAsync();
+
+                return Ok(new ResponseDto<string>
+                {
+                    Status = true,
+                    Message = "Foto del autor cargada exitosamente"
+
+                });
+            }
+        }
+
+
 
         [HttpGet]
         public async Task<ActionResult<ResponseDto<IReadOnlyList<AutorDto>>>> Get() 

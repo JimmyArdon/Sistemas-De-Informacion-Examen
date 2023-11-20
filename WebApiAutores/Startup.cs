@@ -41,6 +41,9 @@ namespace WebApiAutores
             services.AddAutoMapper(typeof(Startup));
             services.AddHttpContextAccessor();
 
+
+            services.AddScoped<ImgBBService>(_ => new ImgBBService(Configuration["ImgBB:ApiKey"]));
+
             services.AddScoped<IWebPurifyService, WebPurifyService>(provider =>
             {
                 var httpClient = new HttpClient { BaseAddress = new Uri("https://api1.webpurify.com/services/rest/") };
@@ -92,11 +95,11 @@ namespace WebApiAutores
         {
             app.UseLogginResponseHttp();
 
-            //if (env.IsDevelopment())
-            //{
-            app.UseSwagger();
-            app.UseSwaggerUI();
-            //}
+            if (env.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
 
             app.UseHttpsRedirection();
 
@@ -106,6 +109,7 @@ namespace WebApiAutores
 
             app.UseCors("CorsRule");
 
+            app.UseAuthentication(); // Agregado para habilitar la autenticación
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

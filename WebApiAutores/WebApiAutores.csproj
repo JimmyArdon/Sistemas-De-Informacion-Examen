@@ -21,6 +21,7 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Perspective" Version="2.2.5" />
+    <PackageReference Include="RestSharp" Version="107.3.0" />
     <PackageReference Include="Richter.WebPurify.Wrapper" Version="1.2.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="System.Net.Http.Json" Version="7.0.0" />
